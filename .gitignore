@@ -1,0 +1,92 @@
+# Node.js dependencies
+node_modules/
+
+# Output directories
+dist/
+build/
+
+# TypeScript compiled output
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# Optional npm cache directory
+.npm/
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript
+*.d.ts
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Coverage directory
+coverage/
+
+# Parcel cache (if using Parcel bundler)
+.cache/
+
+# Svelte generated code (if using Svelte)
+__sapper__/
+.svelte-kit/
+
+# Next.js build output (if using Next.js)
+.next/
+
+# Nuxt.js build output (if using Nuxt.js)
+.nuxt/
+
+# Storybook files
+.storybook/
+out/
+
+# Static files cache
+.cache/
+.pnp
+.pnp.js
+
+# VS Code settings
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# Mac OS Finder
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test coverage reports
+coverage/
+
+# Jest cache
+jest/
+
+# TypeScript output files
+*.js
+*.js.map
+
+# Build directories
+out/
+lib/
+
