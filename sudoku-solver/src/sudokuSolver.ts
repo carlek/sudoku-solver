@@ -6,7 +6,7 @@ interface PuzzleNode {
     col: number;
 }
 
-function sudokuSolver(puzzle: number[][]): number[][] {
+export function sudokuSolver(puzzle: number[][]): number[][] {
     const n = 3; // For standard Sudoku
     const N = n * n;
     const size = N * N;
