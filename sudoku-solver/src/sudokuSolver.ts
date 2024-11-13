@@ -1,15 +1,20 @@
 import { Graph, Node, Edge } from 'ts-graphviz';
 import { cloneDeep } from 'lodash';
+import { isValidSudoku } from './isValidSudoku';
 
 interface PuzzleNode {
     row: number;
     col: number;
 }
 
-export function sudokuSolver(puzzle: number[][]): number[][] {
+export function sudokuSolver(puzzle: number[][]): number[][] | null {
     const n = 3; // For standard Sudoku
     const N = n * n;
     const size = N * N;
+
+    if (!isValidSudoku(puzzle)) {
+        return null;
+    }
 
     // create mapping: (row, col) to node number 
     function rcToNode(r: number, c: number): number {
@@ -75,37 +80,41 @@ export function sudokuSolver(puzzle: number[][]): number[][] {
         }
     }
 
-    // Pre-assign colors based on the puzzle
-    const colors: { [key: string]: number } = {};
+    // Pre-assign numbers based on the puzzle
+    const assignedNumbers: { [key: string]: number } = {};
+    const emptyNodes: number[] = [];
+
     for (let r = 0; r < N; r++) {
         for (let c = 0; c < N; c++) {
             const value = puzzle[r][c];
+            const node = rcToNode(r, c);
             if (value !== 0) {
-                const node = rcToNode(r, c);
-                colors[node.toString()] = value;
+                assignedNumbers[node.toString()] = value; // Pre-assign given numbers
+            } else {
+                emptyNodes.push(node); // Track empty nodes that can be modified
             }
         }
     }
 
-    // solver to complete the coloring
+    // solver to complete the assignment
     function backtrack(assign: { [key: string]: number }, nodes: number[]): { [key: string]: number } | null {
         if (nodes.length === 0) {
             return assign;
         }
 
-        // minimum remaining value heuristic: select a node with the fewest possible colors 
+        // minimum remaining value heuristic: select a node with the fewest possible numbers
         const node = nodes.reduce((minNode, currentNode) => {
-            const minPossibleColors = possibleColors(minNode, assign).length;
-            const currentPossibleColors = possibleColors(currentNode, assign).length;
-            return currentPossibleColors < minPossibleColors ? currentNode : minNode;
+            const minPossibleNumbers = possibleNumbers(minNode, assign).length;
+            const currentPossibleNumbers = possibleNumbers(currentNode, assign).length;
+            return currentPossibleNumbers < minPossibleNumbers ? currentNode : minNode;
         }, nodes[0]);
 
-        for (const color of possibleColors(node, assign)) {
-            // check if color is valid and recurse 
+        for (const number of possibleNumbers(node, assign)) {
+            // check if number is valid and recurse
             const neighbors = getNeighbors(node.toString());
-            const isValid = neighbors.every((neighbor: string) => assign[neighbor] !== color);
+            const isValid = neighbors.every((neighbor: string) => assign[neighbor] !== number);
             if (isValid) {
-                assign[node.toString()] = color;
+                assign[node.toString()] = number;
                 const result = backtrack(assign, nodes.filter(n => n !== node));
                 if (result) {
                     return result;
@@ -120,78 +129,41 @@ export function sudokuSolver(puzzle: number[][]): number[][] {
         return adjList[node];
     }
 
-    function possibleColors(node: number, assign: { [key: string]: number }): number[] {
-        const usedColors = new Set<number>();
+    function possibleNumbers(node: number, assign: { [key: string]: number }): number[] {
+        const usedNumbers = new Set<number>();
         const neighbors = getNeighbors(node.toString());
         for (const neighbor of neighbors) {
-            const color = assign[neighbor];
-            if (color !== undefined) {
-                usedColors.add(color);
+            const number = assign[neighbor];
+            if (number !== undefined) {
+                usedNumbers.add(number);
             }
         }
-        const availableColors = [];
+        const availableNumbers = [];
         for (let c = 1; c <= N; c++) {
-            if (!usedColors.has(c)) {
-                availableColors.push(c);
+            if (!usedNumbers.has(c)) {
+                availableNumbers.push(c);
             }
         }
-        return availableColors;
+        return availableNumbers;
     }
 
-    // solve using a backtrack algorithm 
-    const solution = backtrack(cloneDeep(colors), Array.from(Array(size).keys()));
+    // solve using a backtrack algorithm, starting only with empty nodes
+    const solution = backtrack(cloneDeep(assignedNumbers), emptyNodes);
 
+    // no solution exists so return null
     if (solution === null) {
-        throw new Error("No solution exists for the given Sudoku puzzle.");
+        return null;
     }
 
     // create an empty solved puzzle and populate solution items in matrix
-    const solvedPuzzle = Array.from({ length: N }, () => Array(N).fill(0));
-    for (const [nodeStr, color] of Object.entries(solution)) {
+    const solvedPuzzle = cloneDeep(puzzle);
+    for (const [nodeStr, number] of Object.entries(solution)) {
         const node = parseInt(nodeStr, 10);
         const { row, col } = nodeToRc(node);
-        solvedPuzzle[row][col] = color;
+        if (solvedPuzzle[row][col] === 0) {
+            solvedPuzzle[row][col] = number; // Only modify cells that were originally empty
+        }
     }
 
     return solvedPuzzle;
 }
-
-// Test the Sudoku solver
-const puzzle1: number[][] = [
-    [0, 7, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 6, 0, 0, 0],
-    [8, 0, 0, 0, 0, 0, 0, 0, 3],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 6, 0, 0, 0, 0, 0],
-    [0, 3, 0, 0, 0, 0, 0, 4, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 7],
-    [0, 0, 0, 0, 2, 0, 4, 0, 0],
-    [5, 0, 1, 0, 0, 0, 0, 0, 0]
-];
-const puzzle2: number[][] = [
-    [0,4,3,0,8,0,2,5,0],
-    [6,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,1,0,9,4],
-    [9,0,0,0,0,4,0,7,0],
-    [0,0,0,6,0,8,0,0,0],
-    [0,1,0,2,0,0,0,0,3],
-    [8,2,0,5,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,5],
-    [0,3,4,0,9,0,7,1,0]
-]
-
-console.log("\nPuzzle1:");
-puzzle1.forEach(row => console.log(row.join(' ')));
-
-console.log("\nSolution:");
-const solved1 = sudokuSolver(puzzle1);
-solved1.forEach(row => console.log(row.join(' ')));
-
-
-console.log("\nPuzzle2:");
-puzzle2.forEach(row => console.log(row.join(' ')));
-
-console.log("\nSolution:");
-const solved2 = sudokuSolver(puzzle2);
-solved2.forEach(row => console.log(row.join(' ')));
-
