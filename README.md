@@ -1,6 +1,6 @@
 # sudoku-solver
 
-A Typescript Sudoku Solver
+A Typescript Sudoku Solver  ***Now with Python Too! (see notebook.ipynb)***
 
 ## Usage
 ```ts
